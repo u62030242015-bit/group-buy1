@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>團購系統</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f5f3ee;--bg2:#ece9e2;--surface:#fff;--border:#ddd9d0;--border2:#c8c3b8;
+  --accent:#2d5a3d;--accent2:#4a8c60;--accent-light:#e8f2eb;
+  --gold:#b8860b;--gold-light:#fdf6e3;
+  --red:#c0392b;--red-light:#fdecea;
+  --text:#1a1a1a;--text-mid:#555;--text-muted:#999;
+  --radius:10px;--shadow:0 2px 12px rgba(0,0,0,.08);--shadow-lg:0 8px 32px rgba(0,0,0,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* LOGIN */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+#login-screen::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(45,90,61,.03) 40px,rgba(45,90,61,.03) 41px);}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:48px 44px;width:380px;box-shadow:var(--shadow-lg);position:relative;z-index:1;animation:slideUp .4s ease;}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.login-logo{text-align:center;margin-bottom:32px;}
+.login-logo .icon{width:64px;height:64px;background:var(--accent);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 14px;}
+.login-logo h1{font-size:22px;font-weight:800;color:var(--accent);}
+.login-logo p{font-size:13px;color:var(--text-muted);margin-top:4px;}
+.role-tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--bg2);border-radius:8px;padding:4px;margin-bottom:24px;}
+.role-tab{padding:9px;text-align:center;cursor:pointer;border-radius:6px;font-size:14px;font-weight:600;transition:all .2s;color:var(--text-muted);}
+.role-tab.active{background:var(--surface);color:var(--accent);box-shadow:0 1px 4px rgba(0,0,0,.1);}
+.lf{margin-bottom:16px;}
+.lf label{display:block;font-size:12px;font-weight:600;color:var(--text-mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.lf input{width:100%;padding:11px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;color:var(--text);outline:none;transition:border-color .2s;}
+.lf input:focus{border-color:var(--accent);}
+.btn-login{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:8px;}
+.btn-login:hover{background:var(--accent2);transform:translateY(-1px);}
+.user-hint{text-align:center;font-size:12px;color:var(--text-muted);margin-top:14px;}
+
+/* APP */
+#app{display:none;min-height:100vh;}
+.topbar{background:var(--accent);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(45,90,61,.3);}
+.topbar-left{display:flex;align-items:center;gap:14px;}
+.topbar-logo{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.3px;}
+.topbar-logo span{opacity:.6;}
+.topbar-badge{background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;letter-spacing:.5px;}
+.admin-badge{background:var(--gold)!important;color:#fff!important;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.topbar-stat{color:rgba(255,255,255,.7);font-size:12px;}
+.topbar-stat strong{color:#fff;font-family:'DM Mono',monospace;}
+.btn-logout{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.8);border-radius:6px;padding:6px 14px;font-family:inherit;font-size:12px;cursor:pointer;transition:all .2s;}
+.btn-logout:hover{background:rgba(255,255,255,.2);color:#fff;}
+
+.nav-tabs{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;gap:0;}
+.nav-tab{padding:14px 20px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-muted);border-bottom:2px solid transparent;transition:all .18s;white-space:nowrap;background:none;border-left:none;border-right:none;border-top:none;font-family:inherit;}
+.nav-tab:hover{color:var(--text);}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+.page{display:none;padding:28px;max-width:1100px;}
+.page.active{display:block;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);}
+.card-header{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-header h2{font-size:15px;font-weight:700;}
+.card-body{padding:22px;}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field.full{grid-column:1/-1;}
+.field label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;}
+.field input,.field select{padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;color:var(--text);outline:none;transition:border-color .18s;}
+.field input:focus,.field select:focus{border-color:var(--accent);background:#fff;}
+
+.btn{border:none;border-radius:8px;padding:10px 20px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;transition:all .18s;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-1px);}
+.btn-ghost{background:var(--bg2);color:var(--text-mid);border:1px solid var(--border);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-danger{background:var(--red-light);color:var(--red);border:1px solid #f5c6c2;}
+.btn-danger:hover{background:var(--red);color:#fff;}
+.btn-gold{background:var(--gold);color:#fff;}
+.btn-gold:hover{background:#9a7209;}
+.btn-sm{padding:6px 12px;font-size:12px;}
+.btn-row{display:flex;gap:10px;margin-top:20px;align-items:center;}
+
+.badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;line-height:1.6;}
+.badge-green{background:var(--accent-light);color:var(--accent);}
+.badge-gold{background:var(--gold-light);color:var(--gold);}
+.badge-red{background:var(--red-light);color:var(--red);}
+.badge-gray{background:var(--bg2);color:var(--text-muted);}
+.badge-num{font-family:'DM Mono',monospace;}
+
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{padding:9px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);background:var(--bg);border-bottom:1px solid var(--border);}
+td{padding:11px 14px;border-bottom:1px solid var(--bg2);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(45,90,61,.02);}
+.del-btn{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;padding:2px 6px;border-radius:4px;transition:all .15s;}
+.del-btn:hover{color:var(--red);background:var(--red-light);}
+.empty-state{text-align:center;padding:48px;color:var(--text-muted);font-size:14px;}
+.empty-state .ei{font-size:40px;margin-bottom:10px;}
+
+.item-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+.item-pill{padding:7px 16px;background:var(--bg2);border:1.5px solid var(--border);border-radius:20px;cursor:pointer;font-size:13px;font-weight:500;transition:all .15s;user-select:none;}
+.item-pill:hover{border-color:var(--accent);color:var(--accent);}
+.item-pill.selected{background:var(--accent-light);border-color:var(--accent);color:var(--accent);font-weight:700;}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);}
+.stat-card .s-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;}
+.stat-card .s-val{font-size:30px;font-weight:900;font-family:'DM Mono',monospace;color:var(--accent);margin:4px 0;}
+.stat-card .s-sub{font-size:12px;color:var(--text-muted);}
+
+/* CHECKOUT */
+.checkout-hero{background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);border-radius:var(--radius);padding:24px 28px;color:#fff;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;}
+.checkout-hero h2{font-size:20px;font-weight:800;}
+.checkout-hero p{opacity:.75;font-size:13px;margin-top:4px;}
+.co-progress{text-align:right;}
+.co-progress .big{font-size:32px;font-weight:900;font-family:'DM Mono',monospace;}
+.co-progress .sub{font-size:12px;opacity:.7;margin-top:2px;}
+
+.person-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;}
+.person-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:all .2s;}
+.person-card.done{border-color:var(--accent);opacity:.72;}
+.pc-head{padding:14px 16px;background:var(--bg2);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.pc-name{font-size:15px;font-weight:800;color:var(--accent);}
+.pc-sub{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.pc-items{padding:12px 16px;display:flex;flex-direction:column;gap:8px;}
+.pc-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--bg);border:1px solid var(--border);cursor:pointer;transition:all .15s;}
+.pc-item:hover{border-color:var(--accent);}
+.pc-item.claimed{background:var(--accent-light);border-color:var(--accent);}
+.pc-item .chk{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-size:11px;}
+.pc-item.claimed .chk{background:var(--accent);border-color:var(--accent);color:#fff;}
+.pc-item .i-name{flex:1;font-size:13px;font-weight:500;}
+.pc-item.claimed .i-name{color:var(--accent);}
+.pc-item .i-qty{font-family:'DM Mono',monospace;font-size:12px;color:var(--text-muted);}
+.pc-foot{padding:10px 16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.done-stamp{display:flex;align-items:center;gap:5px;color:var(--accent);font-size:12px;font-weight:700;}
+
+.filter-bar{display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap;}
+.filter-bar select,.filter-bar input{padding:9px 12px;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);outline:none;transition:border-color .18s;}
+.filter-bar select:focus,.filter-bar input:focus{border-color:var(--accent);}
+.filter-bar select{min-width:180px;}
+.filter-bar input{min-width:180px;}
+
+.items-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;}
+.item-mgr{background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;}
+
+#toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);transform:translateY(80px);opacity:0;transition:all .3s;z-index:9999;pointer-events:none;}
+#toast.show{transform:translateY(0);opacity:1;}
+
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+@media(max-width:700px){
+  .stats-row{grid-template-columns:1fr 1fr;}
+  .form-grid{grid-template-columns:1fr;}
+  .page{padding:16px;}
+  .topbar{padding:0 16px;}
+  .nav-tabs{padding:0 12px;overflow-x:auto;}
+  .topbar-stat{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="icon">🛒</div>
+      <h1>團購系統</h1>
+      <p>請選擇身份後登入</p>
+    </div>
+    <div class="role-tabs">
+      <div class="role-tab active" onclick="setRole('user')">一般會員</div>
+      <div class="role-tab" onclick="setRole('admin')">管理員</div>
+    </div>
+    <div class="lf">
+      <label>姓名 / 暱稱</label>
+      <input type="text" id="login-name" placeholder="請輸入您的姓名" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="lf" id="pw-field" style="display:none">
+      <label>管理員密碼</label>
+      <input type="password" id="login-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-login" onclick="doLogin()">進入系統</button>
+    <p class="user-hint" id="login-hint">一般會員可直接登記訂購</p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">團購<span>系統</span></div>
+      <span class="topbar-badge" id="topbar-role">會員</span>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-stat" id="topbar-info"></span>
+      <button class="btn-logout" onclick="logout()">登出</button>
+    </div>
+  </div>
+  <div class="nav-tabs" id="nav-tabs"></div>
+
+  <!-- PAGE: 登記訂購 -->
+  <div class="page active" id="page-order">
+    <div style="display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start">
+      <div class="card">
+        <div class="card-header"><h2>✏️ 登記訂購</h2></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="field full">
+              <label>選擇開團</label>
+              <select id="o-group" onchange="loadGroupItems()"><option value="">— 請選擇目前開團 —</option></select>
+            </div>
+            <div class="field full">
+              <label>選擇品項</label>
+              <div class="item-pills" id="item-pills"><span style="font-size:13px;color:var(--text-muted)">請先選擇開團</span></div>
+              <input type="hidden" id="o-item">
+            </div>
+            <div class="field">
+              <label>數量</label>
+              <input type="number" id="o-qty" min="1" value="1">
+            </div>
+            <div class="field">
+              <label>登記人</label>
+              <input type="text" id="o-person" placeholder="您的姓名">
+            </div>
+            <div class="field full">
+              <label>備註（選填）</label>
+              <input type="text" id="o-note" placeholder="口味、規格等備註">
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-ghost" onclick="clearOrderForm()">清除</button>
+            <button class="btn btn-primary" onclick="addOrder()">確認登記</button>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="position:sticky;top:70px">
+        <div class="card-header"><h2>📢 進行中的開團</h2></div>
+        <div style="padding:12px" id="active-groups-panel"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:20px">
+      <div class="card-header">
+        <h2>我的訂購紀錄</h2>
+        <span id="my-order-count" class="badge badge-green badge-num">0 筆</span>
+      </div>
+      <div class="tbl-wrap" id="my-orders-table"></div>
+    </div>
+  </div>
+
+  <!-- PAGE: 開團管理 (admin) -->
+  <div class="page" id="page-groups">
+    <div style="display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start">
+      <div class="card">
+        <div class="card-header"><h2>➕ 建立新開團</h2></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="field"><label>開團日期</label><input type="date" id="g-date"></div>
+            <div class="field"><label>截止日期</label><input type="date" id="g-end"></div>
+            <div class="field full"><label>開團主旨 / 名稱</label><input type="text" id="g-title" placeholder="例：有機蔬果箱八月團購"></div>
+            <div class="field full">
+              <label>開放品項（選擇此次開放的品名）</label>
+              <div class="item-pills" id="g-item-pills" style="margin-top:4px"></div>
+            </div>
+            <div class="field full"><label>備註（選填）</label><input type="text" id="g-note" placeholder="配送方式、注意事項..."></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-ghost" onclick="clearGroupForm()">清除</button>
+            <button class="btn btn-primary" onclick="addGroup()">建立開團</button>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="position:sticky;top:70px">
+        <div class="card-header"><h2>⚙️ 品名管理</h2></div>
+        <div class="card-body" style="padding-bottom:8px">
+          <div style="display:flex;gap:8px;margin-bottom:14px">
+            <input type="text" id="new-item-name" placeholder="新增品名..." style="flex:1;padding:9px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addItemType()">
+            <button class="btn btn-primary btn-sm" onclick="addItemType()">新增</button>
+          </div>
+          <div class="items-grid" id="items-grid"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:20px">
+      <div class="card-header"><h2>📋 開團列表</h2></div>
+      <div class="tbl-wrap" id="groups-table"></div>
+    </div>
+  </div>
+
+  <!-- PAGE: 訂購紀錄 (admin) -->
+  <div class="page" id="page-records">
+    <div class="filter-bar">
+      <select id="r-filter-group" onchange="renderRecords()"><option value="">全部開團</option></select>
+      <input type="text" id="r-search" placeholder="搜尋姓名、品名…" oninput="renderRecords()">
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ 匯出 CSV</button>
+    </div>
+    <div class="card">
+      <div class="card-header"><h2>訂購紀錄</h2><span id="records-count" class="badge badge-green badge-num">0 筆</span></div>
+      <div class="tbl-wrap" id="records-table"></div>
+    </div>
+  </div>
+
+  <!-- PAGE: 統計報表 (admin) -->
+  <div class="page" id="page-stats">
+    <div class="filter-bar">
+      <select id="s-filter-group" onchange="renderStats()"><option value="">全部開團</option></select>
+    </div>
+    <div class="stats-row" id="stats-row"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="card"><div class="card-header"><h2>📦 品項統計</h2></div><div class="tbl-wrap" id="item-stats-table"></div></div>
+      <div class="card"><div class="card-header"><h2>👤 登記人統計</h2></div><div class="tbl-wrap" id="person-stats-table"></div></div>
+    </div>
+  </div>
+
+  <!-- PAGE: 核銷 (admin) -->
+  <div class="page" id="page-checkout">
+    <div class="checkout-hero">
+      <div>
+        <h2>到貨核銷</h2>
+        <p>選擇開團後，逐一確認每位會員領取商品</p>
+      </div>
+      <div class="co-progress">
+        <div class="big" id="checkout-progress">0 / 0</div>
+        <div class="sub">人已完成領取</div>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <select id="co-group" onchange="renderCheckout()"><option value="">— 請選擇開團 —</option></select>
+      <span id="co-summary" class="badge badge-green" style="font-size:13px"></span>
+      <button class="btn btn-ghost btn-sm" id="btn-reset-all" onclick="resetAllCheckout()" style="display:none">重置全部核銷</button>
+    </div>
+    <div class="person-cards" id="person-cards"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────
+let role = 'user', currentUser = '';
+const ADMIN_PW = 'admin123';
+
+let groups    = JSON.parse(localStorage.getItem('gb_groups')    || '[]');
+let orders    = JSON.parse(localStorage.getItem('gb_orders')    || '[]');
+let itemTypes = JSON.parse(localStorage.getItem('gb_items')     || JSON.stringify(['布丁6入','有機水果箱','雞蛋30顆','牛奶1L','優格原味']));
+let checkouts = JSON.parse(localStorage.getItem('gb_checkouts') || '{}');
+
+function save() {
+  localStorage.setItem('gb_groups',    JSON.stringify(groups));
+  localStorage.setItem('gb_orders',    JSON.stringify(orders));
+  localStorage.setItem('gb_items',     JSON.stringify(itemTypes));
+  localStorage.setItem('gb_checkouts', JSON.stringify(checkouts));
+}
+
+// ─── LOGIN ────────────────────────────────────────────────────────────
+let loginRole = 'user';
+function setRole(r) {
+  loginRole = r;
+  document.querySelectorAll('.role-tab').forEach((el,i)=>el.classList.toggle('active',(i===0&&r==='user')||(i===1&&r==='admin')));
+  document.getElementById('pw-field').style.display = r==='admin'?'block':'none';
+  document.getElementById('login-hint').textContent = r==='admin'?'管理員可開團、管理品名及核銷':'一般會員可直接登記訂購';
+}
+function doLogin() {
+  const name = document.getElementById('login-name').value.trim();
+  if (!name) { toast('請輸入姓名', false); return; }
+  if (loginRole==='admin' && document.getElementById('login-pw').value !== ADMIN_PW) { toast('密碼錯誤', false); return; }
+  role = loginRole; currentUser = name;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  buildNav(); initApp();
+  document.getElementById('o-person').value = currentUser;
+}
+function logout() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-name').value = '';
+  document.getElementById('login-pw').value = '';
+}
+
+// ─── NAV ──────────────────────────────────────────────────────────────
+function buildNav() {
+  const tabs = role==='admin'
+    ? [['page-order','登記訂購'],['page-groups','開團管理'],['page-records','訂購紀錄'],['page-stats','統計報表'],['page-checkout','到貨核銷']]
+    : [['page-order','登記訂購']];
+  document.getElementById('nav-tabs').innerHTML = tabs.map(([id,label],i)=>
+    `<button class="nav-tab${i===0?' active':''}" onclick="switchPage('${id}',this)">${label}</button>`
+  ).join('');
+  const b = document.getElementById('topbar-role');
+  b.textContent = (role==='admin'?'管理員 ':'會員 ') + currentUser;
+  if (role==='admin') b.classList.add('admin-badge');
+}
+function switchPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id==='page-order')    { renderActiveGroups(); renderMyOrders(); renderGroupSelect(); }
+  if (id==='page-groups')   { renderItemTypeGrid(); renderGroupsTable(); renderGroupItemPills(); }
+  if (id==='page-records')  { renderRecords(); }
+  if (id==='page-stats')    { populateFilter('s-filter-group'); renderStats(); }
+  if (id==='page-checkout') { populateFilter('co-group'); renderCheckout(); }
+  updateTopbar();
+}
+function initApp() {
+  renderActiveGroups(); renderMyOrders(); renderGroupSelect(); updateTopbar();
+  const d = document.getElementById('g-date'); if(d) d.value = today();
+}
+function today() { return new Date().toISOString().slice(0,10); }
+function updateTopbar() {
+  const q = orders.reduce((s,o)=>s+o.qty,0);
+  document.getElementById('topbar-info').innerHTML =
+    `開團 <strong>${groups.length}</strong>&nbsp;｜&nbsp;訂單 <strong>${orders.length}</strong> 筆&nbsp;｜&nbsp;數量 <strong>${q}</strong>`;
+}
+function populateFilter(id) {
+  document.getElementById(id).innerHTML =
+    (id==='co-group'?'<option value="">— 請選擇開團 —</option>':'<option value="">全部開團</option>') +
+    groups.slice().reverse().map(g=>`<option value="${g.id}">${g.title}（${g.date}）</option>`).join('');
+}
+
+// ─── ITEM TYPES ───────────────────────────────────────────────────────
+function renderItemTypeGrid() {
+  document.getElementById('items-grid').innerHTML = itemTypes.length===0
+    ? '<span style="font-size:13px;color:var(--text-muted)">尚無品名，請新增</span>'
+    : itemTypes.map((it,i)=>`<div class="item-mgr"><span>${it}</span><button class="del-btn" style="font-size:15px" onclick="removeItemType(${i})">×</button></div>`).join('');
+  renderGroupItemPills();
+}
+function addItemType() {
+  const v = document.getElementById('new-item-name').value.trim();
+  if (!v) return;
+  if (itemTypes.includes(v)) { toast('品名已存在', false); return; }
+  itemTypes.push(v); document.getElementById('new-item-name').value = '';
+  save(); renderItemTypeGrid(); toast(`已新增品項「${v}」`);
+}
+function removeItemType(i) {
+  if (!confirm(`確定刪除品項「${itemTypes[i]}」？`)) return;
+  itemTypes.splice(i,1); save(); renderItemTypeGrid();
+}
+
+// ─── GROUP ITEM PILLS ─────────────────────────────────────────────────
+let selectedGroupItems = [];
+function renderGroupItemPills() {
+  const el = document.getElementById('g-item-pills');
+  if (!el) return;
+  el.innerHTML = itemTypes.map(it=>
+    `<div class="item-pill${selectedGroupItems.includes(it)?' selected':''}" onclick="toggleGI(this,'${esc(it)}')">${it}</div>`
+  ).join('') || '<span style="font-size:13px;color:var(--text-muted)">請先在右側新增品名</span>';
+}
+function toggleGI(el, it) {
+  const i = selectedGroupItems.indexOf(it);
+  i>=0 ? selectedGroupItems.splice(i,1) : selectedGroupItems.push(it);
+  el.classList.toggle('selected');
+}
+
+// ─── GROUPS ───────────────────────────────────────────────────────────
+function addGroup() {
+  const date=document.getElementById('g-date').value, end=document.getElementById('g-end').value;
+  const title=document.getElementById('g-title').value.trim();
+  if (!date||!title) { toast('請填寫開團日期與名稱', false); return; }
+  if (!selectedGroupItems.length) { toast('請選擇至少一個品項', false); return; }
+  groups.push({ id:Date.now(), date, end, title, items:[...selectedGroupItems], note:document.getElementById('g-note').value, status:'open' });
+  save(); clearGroupForm(); renderGroupsTable(); renderGroupSelect(); updateTopbar();
+  toast('✓ 開團建立成功！');
+}
+function clearGroupForm() {
+  ['g-date','g-end','g-title','g-note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('g-date').value = today();
+  selectedGroupItems = []; renderGroupItemPills();
+}
+function toggleGroupStatus(id) {
+  const g = groups.find(g=>g.id===id); if(!g) return;
+  g.status = g.status==='open'?'closed':'open';
+  save(); renderGroupsTable(); renderActiveGroups(); renderGroupSelect();
+  toast(g.status==='open'?'已重新開放':'已關閉報名');
+}
+function deleteGroup(id) {
+  if (!confirm('確定刪除此開團？相關訂購也會一併刪除。')) return;
+  groups=groups.filter(g=>g.id!==id); orders=orders.filter(o=>o.groupId!==id);
+  save(); renderGroupsTable(); renderRecords(); updateTopbar(); toast('已刪除',false);
+}
+function renderGroupsTable() {
+  const el=document.getElementById('groups-table');
+  if (!groups.length) { el.innerHTML=`<div class="empty-state"><div class="ei">📭</div>尚未建立任何開團</div>`; return; }
+  el.innerHTML=`<table><thead><tr><th>開團名稱</th><th>開團日期</th><th>截止</th><th>品項</th><th>訂購</th><th>狀態</th><th></th></tr></thead><tbody>`+
+  groups.slice().reverse().map(g=>{
+    const cnt=orders.filter(o=>o.groupId===g.id).length;
+    const qty=orders.filter(o=>o.groupId===g.id).reduce((s,o)=>s+o.qty,0);
+    return `<tr>
+      <td><strong>${g.title}</strong>${g.note?`<br><span style="font-size:11px;color:var(--text-muted)">${g.note}</span>`:''}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px">${g.date}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text-muted)">${g.end||'—'}</td>
+      <td>${(g.items||[]).map(it=>`<span class="badge badge-gray" style="margin:2px">${it}</span>`).join('')}</td>
+      <td><span class="badge badge-num badge-green">${cnt}筆 / ${qty}件</span></td>
+      <td><button class="btn btn-sm ${g.status==='open'?'btn-ghost':'btn-danger'}" onclick="toggleGroupStatus(${g.id})">${g.status==='open'?'✅ 開放中':'🔒 已關閉'}</button></td>
+      <td><button class="del-btn" onclick="deleteGroup(${g.id})">×</button></td>
+    </tr>`;
+  }).join('')+'</tbody></table>';
+}
+
+// ─── ORDERS ───────────────────────────────────────────────────────────
+function renderGroupSelect() {
+  const open=groups.filter(g=>g.status==='open');
+  document.getElementById('o-group').innerHTML=
+    '<option value="">— 請選擇目前開團 —</option>'+
+    open.map(g=>`<option value="${g.id}">${g.title}（截止 ${g.end||'未設定'}）</option>`).join('');
+  document.getElementById('item-pills').innerHTML='<span style="font-size:13px;color:var(--text-muted)">請先選擇開團</span>';
+  document.getElementById('o-item').value='';
+}
+function loadGroupItems() {
+  const g=groups.find(g=>g.id===parseInt(document.getElementById('o-group').value));
+  if (!g) { document.getElementById('item-pills').innerHTML='<span style="font-size:13px;color:var(--text-muted)">請先選擇開團</span>'; return; }
+  document.getElementById('o-item').value='';
+  document.getElementById('item-pills').innerHTML=(g.items||[]).map(it=>
+    `<div class="item-pill" onclick="selOItem(this,'${esc(it)}')">${it}</div>`
+  ).join('')||'<span style="font-size:13px;color:var(--text-muted)">此開團無品項</span>';
+}
+function selOItem(el,item) {
+  document.getElementById('o-item').value=item;
+  document.querySelectorAll('#item-pills .item-pill').forEach(p=>p.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function addOrder() {
+  const gid=parseInt(document.getElementById('o-group').value);
+  const item=document.getElementById('o-item').value;
+  const qty=parseInt(document.getElementById('o-qty').value)||0;
+  const person=document.getElementById('o-person').value.trim()||currentUser;
+  if (!gid)  { toast('請選擇開團',false); return; }
+  if (!item) { toast('請選擇品項',false); return; }
+  if (qty<1) { toast('數量至少為 1',false); return; }
+  if (!person){ toast('請填寫登記人',false); return; }
+  orders.push({ id:Date.now(), groupId:gid, item, qty, person, note:document.getElementById('o-note').value, createdAt:new Date().toLocaleString('zh-TW') });
+  save(); clearOrderForm(); renderMyOrders(); updateTopbar();
+  toast(`✓ ${person} 已登記 ${item} ×${qty}`);
+}
+function clearOrderForm() {
+  document.getElementById('o-group').value='';
+  document.getElementById('o-item').value='';
+  document.getElementById('o-qty').value=1;
+  document.getElementById('o-note').value='';
+  document.getElementById('item-pills').innerHTML='<span style="font-size:13px;color:var(--text-muted)">請先選擇開團</span>';
+}
+function deleteOrder(id) {
+  orders=orders.filter(o=>o.id!==id); delete checkouts[id];
+  save(); renderMyOrders(); renderRecords(); updateTopbar(); toast('已刪除',false);
+}
+function renderActiveGroups() {
+  const open=groups.filter(g=>g.status==='open');
+  const el=document.getElementById('active-groups-panel');
+  if (!open.length) { el.innerHTML='<div class="empty-state" style="padding:24px"><div class="ei">📭</div>目前無開放中的開團</div>'; return; }
+  el.innerHTML=open.map(g=>`
+    <div style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);margin-bottom:8px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'" onclick="document.getElementById('o-group').value=${g.id};loadGroupItems()">
+      <div style="font-size:13px;font-weight:700;color:var(--accent)">${g.title}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:2px;font-family:'DM Mono',monospace">${g.date} ～ ${g.end||'未設截止'}</div>
+      <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">${(g.items||[]).map(it=>`<span class="badge badge-gray">${it}</span>`).join('')}</div>
+    </div>`).join('');
+}
+function renderMyOrders() {
+  const mine=orders.filter(o=>o.person===currentUser);
+  document.getElementById('my-order-count').textContent=mine.length+' 筆';
+  const el=document.getElementById('my-orders-table');
+  if (!mine.length) { el.innerHTML='<div class="empty-state"><div class="ei">🗒️</div>您尚未登記任何訂購</div>'; return; }
+  el.innerHTML=`<table><thead><tr><th>開團</th><th>品名</th><th>數量</th><th>備註</th><th>時間</th><th></th></tr></thead><tbody>`+
+  mine.slice().reverse().map(o=>`<tr>
+    <td><strong>${gTitle(o.groupId)}</strong></td>
+    <td>${o.item}</td>
+    <td><span class="badge badge-green badge-num">×${o.qty}</span></td>
+    <td style="color:var(--text-muted)">${o.note||'—'}</td>
+    <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted)">${o.createdAt}</td>
+    <td><button class="del-btn" onclick="deleteOrder(${o.id})">×</button></td>
+  </tr>`).join('')+'</tbody></table>';
+}
+
+// ─── RECORDS ──────────────────────────────────────────────────────────
+function renderRecords() {
+  populateFilter('r-filter-group');
+  const gid=document.getElementById('r-filter-group').value;
+  const q=document.getElementById('r-search').value.toLowerCase();
+  let data=orders;
+  if (gid) data=data.filter(o=>o.groupId==gid);
+  if (q)   data=data.filter(o=>o.person.toLowerCase().includes(q)||o.item.toLowerCase().includes(q)||gTitle(o.groupId).toLowerCase().includes(q));
+  document.getElementById('records-count').textContent=data.length+' 筆';
+  const el=document.getElementById('records-table');
+  if (!data.length) { el.innerHTML='<div class="empty-state"><div class="ei">🗂️</div>無符合的紀錄</div>'; return; }
+  el.innerHTML=`<table><thead><tr><th>#</th><th>開團</th><th>日期</th><th>品名</th><th>數量</th><th>登記人</th><th>備註</th><th>時間</th><th></th></tr></thead><tbody>`+
+  data.slice().reverse().map((o,i)=>`<tr>
+    <td style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:11px">${data.length-i}</td>
+    <td><strong>${gTitle(o.groupId)}</strong></td>
+    <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text-muted)">${gDate(o.groupId)}</td>
+    <td>${o.item}</td>
+    <td><span class="badge badge-green badge-num">×${o.qty}</span></td>
+    <td style="font-weight:700;color:var(--accent)">${o.person}</td>
+    <td style="color:var(--text-muted)">${o.note||'—'}</td>
+    <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted)">${o.createdAt}</td>
+    <td><button class="del-btn" onclick="deleteOrder(${o.id})">×</button></td>
+  </tr>`).join('')+'</tbody></table>';
+}
+
+// ─── STATS ────────────────────────────────────────────────────────────
+function renderStats() {
+  populateFilter('s-filter-group');
+  const gid=document.getElementById('s-filter-group').value;
+  const data=gid?orders.filter(o=>o.groupId==gid):orders;
+  const totalQ=data.reduce((s,o)=>s+o.qty,0);
+  const persons=[...new Set(data.map(o=>o.person))].length;
+  document.getElementById('stats-row').innerHTML=`
+    <div class="stat-card"><div class="s-label">開團數</div><div class="s-val">${gid?1:groups.length}</div><div class="s-sub">個開團</div></div>
+    <div class="stat-card"><div class="s-label">訂購筆數</div><div class="s-val">${data.length}</div><div class="s-sub">筆訂單</div></div>
+    <div class="stat-card"><div class="s-label">總數量</div><div class="s-val">${totalQ}</div><div class="s-sub">件商品</div></div>
+    <div class="stat-card"><div class="s-label">參與人數</div><div class="s-val">${persons}</div><div class="s-sub">位登記者</div></div>`;
+  const iMap={}, pMap={};
+  data.forEach(o=>{ iMap[o.item]=(iMap[o.item]||0)+o.qty; if(!pMap[o.person])pMap[o.person]={c:0,q:0}; pMap[o.person].c++; pMap[o.person].q+=o.qty; });
+  const iArr=Object.entries(iMap).sort((a,b)=>b[1]-a[1]); const mi=iArr[0]?.[1]||1;
+  document.getElementById('item-stats-table').innerHTML=iArr.length===0?'<div class="empty-state">尚無資料</div>':
+    `<table><thead><tr><th>#</th><th>品名</th><th>總數量</th></tr></thead><tbody>`+
+    iArr.map(([n,q],i)=>`<tr><td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted)">${i+1}</td>
+      <td><div style="font-weight:600">${n}</div><div style="height:4px;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));width:${Math.round(q/mi*100)}%;margin-top:5px"></div></td>
+      <td><span class="badge badge-green badge-num">×${q}</span></td></tr>`).join('')+'</tbody></table>';
+  const pArr=Object.entries(pMap).sort((a,b)=>b[1].q-a[1].q); const mp=pArr[0]?.[1].q||1;
+  document.getElementById('person-stats-table').innerHTML=pArr.length===0?'<div class="empty-state">尚無資料</div>':
+    `<table><thead><tr><th>#</th><th>登記人</th><th>數量</th><th>筆數</th></tr></thead><tbody>`+
+    pArr.map(([n,s],i)=>`<tr><td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted)">${i+1}</td>
+      <td><div style="font-weight:700;color:var(--accent)">${n}</div><div style="height:4px;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));width:${Math.round(s.q/mp*100)}%;margin-top:5px"></div></td>
+      <td><span class="badge badge-green badge-num">×${s.q}</span></td>
+      <td style="color:var(--text-muted)">${s.c}筆</td></tr>`).join('')+'</tbody></table>';
+}
+
+// ─── CHECKOUT ─────────────────────────────────────────────────────────
+function renderCheckout() {
+  const gid=parseInt(document.getElementById('co-group').value);
+  const el=document.getElementById('person-cards');
+  document.getElementById('btn-reset-all').style.display = gid?'inline-flex':'none';
+  if (!gid) {
+    el.innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="ei">☝️</div>請先選擇開團</div>';
+    document.getElementById('co-summary').textContent='';
+    document.getElementById('checkout-progress').textContent='0 / 0';
+    return;
+  }
+  const gOrders=orders.filter(o=>o.groupId===gid);
+  if (!gOrders.length) { el.innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="ei">🗒️</div>此開團尚無訂購紀錄</div>'; return; }
+
+  const pMap={};
+  gOrders.forEach(o=>{ if(!pMap[o.person]) pMap[o.person]=[]; pMap[o.person].push(o); });
+  const persons=Object.keys(pMap);
+  const done=persons.filter(p=>pMap[p].every(o=>checkouts[o.id]));
+  document.getElementById('checkout-progress').textContent=`${done.length} / ${persons.length}`;
+
+  const tQty=gOrders.reduce((s,o)=>s+o.qty,0);
+  const cQty=gOrders.filter(o=>checkouts[o.id]).reduce((s,o)=>s+o.qty,0);
+  document.getElementById('co-summary').textContent=`共 ${tQty} 件，已核銷 ${cQty} 件`;
+
+  // sort: undone first
+  persons.sort((a,b)=>{ const ad=pMap[a].every(o=>checkouts[o.id]),bd=pMap[b].every(o=>checkouts[o.id]); return ad===bd?0:ad?1:-1; });
+
+  el.innerHTML=persons.map(person=>{
+    const po=pMap[person]; const allDone=po.every(o=>checkouts[o.id]);
+    const doneCount=po.filter(o=>checkouts[o.id]).length;
+    return `<div class="person-card${allDone?' done':''}">
+      <div class="pc-head">
+        <div>
+          <div class="pc-name">${person}</div>
+          <div class="pc-sub">${po.length}種 · 共${po.reduce((s,o)=>s+o.qty,0)}件</div>
+        </div>
+        ${allDone
+          ? '<span class="done-stamp">✅ 已領取</span>'
+          : `<button class="btn btn-primary btn-sm" onclick="claimAll('${esc(person)}',${gid})">全部核銷</button>`}
+      </div>
+      <div class="pc-items">
+        ${po.map(o=>`<div class="pc-item${checkouts[o.id]?' claimed':''}" onclick="toggleClaim(${o.id},${gid})">
+          <div class="chk">${checkouts[o.id]?'✓':''}</div>
+          <div class="i-name">${o.item}${o.note?` <span style="font-size:11px;opacity:.6">（${o.note}）</span>`:''}</div>
+          <div class="i-qty">×${o.qty}</div>
+        </div>`).join('')}
+      </div>
+      <div class="pc-foot">
+        <span style="font-size:12px;color:var(--text-muted)">${doneCount} / ${po.length} 項已核銷</span>
+        ${allDone?'':`<button class="btn btn-ghost btn-sm" onclick="unclaimAll('${esc(person)}',${gid})">重置</button>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+function toggleClaim(id,gid) { checkouts[id]?delete checkouts[id]:checkouts[id]=true; save(); renderCheckout(); }
+function claimAll(person,gid) {
+  orders.filter(o=>o.groupId===gid&&o.person===person).forEach(o=>checkouts[o.id]=true);
+  save(); renderCheckout(); toast(`✓ ${person} 全部核銷完成`);
+}
+function unclaimAll(person,gid) {
+  orders.filter(o=>o.groupId===gid&&o.person===person).forEach(o=>delete checkouts[o.id]);
+  save(); renderCheckout();
+}
+function resetAllCheckout() {
+  const gid=parseInt(document.getElementById('co-group').value);
+  if (!gid||!confirm('確定重置此開團所有核銷紀錄？')) return;
+  orders.filter(o=>o.groupId===gid).forEach(o=>delete checkouts[o.id]);
+  save(); renderCheckout(); toast('已重置所有核銷',false);
+}
+
+// ─── UTILS ────────────────────────────────────────────────────────────
+function gTitle(id) { const g=groups.find(g=>g.id===id); return g?g.title:'(已刪除)'; }
+function gDate(id)  { const g=groups.find(g=>g.id===id); return g?g.date:''; }
+function esc(s) { return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+
+function exportCSV() {
+  const gid=document.getElementById('r-filter-group').value;
+  const q=document.getElementById('r-search').value.toLowerCase();
+  let data=orders;
+  if (gid) data=data.filter(o=>o.groupId==gid);
+  if (q)   data=data.filter(o=>o.person.toLowerCase().includes(q)||o.item.toLowerCase().includes(q));
+  const rows=[['開團名稱','開團日期','品名','數量','登記人','備註','登記時間','核銷狀態']];
+  data.forEach(o=>rows.push([gTitle(o.groupId),gDate(o.groupId),o.item,o.qty,o.person,o.note||'',o.createdAt,checkouts[o.id]?'已核銷':'未核銷']));
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download=`團購紀錄_${today()}.csv`; a.click();
+}
+
+function toast(msg, ok=true) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.style.background=ok?'var(--accent)':'var(--red)'; el.style.color='#fff';
+  el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2400);
+}
+</script>
+</body>
+</html>
